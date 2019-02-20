@@ -1,0 +1,4 @@
+ps2	KEYWORD1
+read	KEYWORD2
+write	KEYWORD2
+
