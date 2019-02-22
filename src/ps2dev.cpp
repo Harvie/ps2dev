@@ -113,7 +113,9 @@ int PS2dev::write(unsigned char data)
   gohi(_ps2clk);
   delayMicroseconds(CLKHALF);
 
-  delayMicroseconds(50);
+  // Delay after byte
+  // I've found i need at least 400us to work, so i've put 500us for reliability
+  delayMicroseconds(500);
   return 0;
 }
 
