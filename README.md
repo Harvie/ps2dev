@@ -9,3 +9,6 @@ Originaly from:
  * Written by Chris J. Kiick, January 2008. https://github.com/ckiick
  * modified by Gene E. Scogin, August 2008.
  * Release into public domain.
+
+Further reading:
+ * https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf
