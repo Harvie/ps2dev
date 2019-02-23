@@ -11,4 +11,5 @@ Originaly from:
  * Release into public domain.
 
 Further reading:
- * https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf
+ * https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf (PS2 specification)
+ * https://github.com/ndusart/ps2-keyboard (similar library using timers instead of delays)
