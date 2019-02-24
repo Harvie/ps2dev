@@ -9,6 +9,8 @@
 
 #include "ps2dev.h"
 
+//Enable serial debug mode?
+//#define _PS2DBG Serial
 
 //since for the device side we are going to be in charge of the clock,
 //the two defines below are how long each _phase_ of the clock cycle is
@@ -54,9 +56,10 @@ int PS2dev::write(unsigned char data)
   unsigned char i;
   unsigned char parity = 1;
 
-  //	Serial.print("sending ");
-  //Serial.println(data,HEX);
-
+#ifdef _PS2DBG
+  _PS2DBG.print("sending ");
+  _PS2DBG.println(data,HEX);
+#endif
 
   if (digitalRead(_ps2clk) == LOW) {
     return -1;
@@ -66,6 +69,10 @@ int PS2dev::write(unsigned char data)
     return -2;
   }
 
+#ifdef _PS2DBG
+  _PS2DBG.print("sent ");
+  _PS2DBG.println(data,HEX);
+#endif
 
   golo(_ps2data);
   delayMicroseconds(CLKHALF);
@@ -187,6 +194,11 @@ int PS2dev::read(unsigned char * value)
 
 
   *value = data;
+
+#ifdef _PS2DBG
+  _PS2DBG.print("Recv ");
+  _PS2DBG.println(*value,HEX);
+#endif
 
   return 0;
 }
