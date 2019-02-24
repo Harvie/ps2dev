@@ -18,11 +18,16 @@ class PS2dev
 		int write(unsigned char data);
 		int read(unsigned char * data);
 		int available();
+		void keyboard_init();
+		int keyboard_reply(unsigned char cmd, unsigned char *leds);
+		int keyboard_handle(unsigned char *leds);
+		int keyboard_mkbrk(unsigned char code);
 	private:
 		int _ps2clk;
 		int _ps2data;
 		void golo(int pin);
 		void gohi(int pin);
+		void ack();
 };
 
 #endif /* ps2dev_h */

@@ -13,3 +13,7 @@ Originaly from:
 Further reading:
  * https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf (PS2 specification)
  * https://github.com/ndusart/ps2-keyboard (similar library using timers instead of delays)
+
+# Notes
+
+ * If you are implementing keyboard you should read the commands from computer quite often. I don't know how often, but 1 second is not enough. You will miss stuff like num/caps/scroll LED changes and maybe even more important stuff needed for proper ps2 protocol initialisation.

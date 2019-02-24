@@ -19,6 +19,11 @@
 // start of phase to the when we drive the data line
 #define CLKHALF 20
 
+// Delay between bytes
+// I've found i need at least 400us to work, so i've put 500us for reliability
+#define BYTEWAIT 500
+
+
 /*
  * the clock and data pins can be wired directly to the clk and data pins
  * of the PS2 connector.  No external parts are needed.
@@ -53,6 +58,8 @@ PS2dev::golo(int pin)
 
 int PS2dev::write(unsigned char data)
 {
+  delayMicroseconds(BYTEWAIT);
+
   unsigned char i;
   unsigned char parity = 1;
 
@@ -120,9 +127,8 @@ int PS2dev::write(unsigned char data)
   gohi(_ps2clk);
   delayMicroseconds(CLKHALF);
 
-  // Delay after byte
-  // I've found i need at least 400us to work, so i've put 500us for reliability
-  delayMicroseconds(500);
+  delayMicroseconds(BYTEWAIT);
+
   return 0;
 }
 
@@ -132,6 +138,8 @@ int PS2dev::available() {
 
 int PS2dev::read(unsigned char * value)
 {
+  delayMicroseconds(BYTEWAIT);
+
   unsigned char data = 0x00;
   unsigned char i;
   unsigned char bit = 0x01;
@@ -200,5 +208,101 @@ int PS2dev::read(unsigned char * value)
   _PS2DBG.println(*value,HEX);
 #endif
 
+  delayMicroseconds(BYTEWAIT);
+
+  return 0;
+}
+
+
+void PS2dev::keyboard_init()
+{
+  while(write(0xAA)!=0);
+  delay(10);
+  return;
+}
+
+void PS2dev::ack()
+{
+  while(write(0xFA));
+  return;
+}
+
+int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
+{
+  unsigned char val;
+  unsigned char enabled;
+  switch (cmd)
+  {
+  case 0xFF: //reset
+    ack();
+    //the while loop lets us wait for the host to be ready
+    while(write(0xAA)!=0);
+    break;
+  case 0xFE: //resend
+    ack();
+    break;
+  case 0xF6: //set defaults
+    //enter stream mode
+    ack();
+    break;
+  case 0xF5: //disable data reporting
+    //FM
+    enabled = 0;
+    ack();
+    break;
+  case 0xF4: //enable data reporting
+    //FM
+    enabled = 1;
+    ack();
+    break;
+  case 0xF3: //set typematic rate
+    ack();
+    read(&val); //do nothing with the rate
+    ack();
+    break;
+  case 0xF2: //get device id
+    ack();
+    write(0xAB);
+    write(0x83);
+    break;
+  case 0xF0: //set scan code set
+    ack();
+    read(&val); //do nothing with the rate
+    ack();
+    break;
+  case 0xEE: //echo
+    //ack();
+    write(0xEE);
+    break;
+  case 0xED: //set/reset LEDs
+    ack();
+    read(leds); //do nothing with the rate
+#ifdef _PS2DBG
+    _PS2DBG.print("LEDs: ");
+    _PS2DBG.println(*leds, HEX);
+    //digitalWrite(LED_BUILTIN, *leds);
+#endif
+    ack();
+    return 1;
+    break;
+  }
+  return 0;
+}
+
+int PS2dev::keyboard_handle(unsigned char *leds) {
+  unsigned char c;  //char stores data recieved from computer for KBD
+  if(available())
+  {
+    read(&c);
+    return keyboard_reply(c, leds);
+  }
+  return 0;
+}
+
+int PS2dev::keyboard_mkbrk(unsigned char code)
+{
+  write(code);
+  write(0xF0);
+  write(code);
   return 0;
 }
