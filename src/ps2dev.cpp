@@ -10,7 +10,7 @@
 #include "ps2dev.h"
 
 //Enable serial debug mode?
-//#define _PS2DBG Serial
+#define _PS2DBG Serial
 
 //since for the device side we are going to be in charge of the clock,
 //the two defines below are how long each _phase_ of the clock cycle is
@@ -22,6 +22,9 @@
 // Delay between bytes
 // I've found i need at least 400us to work, so i've put 500us for reliability
 #define BYTEWAIT 500
+
+// Timeout if computer not sending for 30ms
+#define TIMEOUT 30
 
 
 /*
@@ -133,28 +136,24 @@ int PS2dev::write(unsigned char data)
 }
 
 int PS2dev::available() {
-  return ( (digitalRead(_ps2data) == LOW) || (digitalRead(_ps2clk) == LOW) );
+  //delayMicroseconds(BYTEWAIT);
+  //return ( (digitalRead(_ps2data) == LOW) || (digitalRead(_ps2clk) == LOW) );
+  return ( (digitalRead(_ps2clk) == LOW) );
 }
 
 int PS2dev::read(unsigned char * value)
 {
-  delayMicroseconds(BYTEWAIT);
-
   unsigned char data = 0x00;
   unsigned char i;
   unsigned char bit = 0x01;
 
   unsigned char parity = 1;
 
-  //wait for data line to go low
-  while (digitalRead(_ps2data) == HIGH) {
-
+  //wait for data line to go low and clock line to go high (or timeout)
+  unsigned long waiting_since = millis();
+  while((digitalRead(_ps2data) != LOW) || (digitalRead(_ps2clk) != HIGH)) {
+    if((millis() - waiting_since) > TIMEOUT) return -1;
   }
-  //wait for clock line to go high
-  while (digitalRead(_ps2clk) == LOW) {
-
-  }
-
 
   delayMicroseconds(CLKHALF);
   golo(_ps2clk);
@@ -208,8 +207,6 @@ int PS2dev::read(unsigned char * value)
   _PS2DBG.println(*value,HEX);
 #endif
 
-  delayMicroseconds(BYTEWAIT);
-
   return 0;
 }
 
@@ -257,8 +254,7 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
     break;
   case 0xF3: //set typematic rate
     ack();
-    read(&val); //do nothing with the rate
-    ack();
+    if(!read(&val)) ack(); //do nothing with the rate
     break;
   case 0xF2: //get device id
     ack();
@@ -267,8 +263,7 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
     break;
   case 0xF0: //set scan code set
     ack();
-    read(&val); //do nothing with the rate
-    ack();
+    if(!read(&val)) ack(); //do nothing with the rate
     break;
   case 0xEE: //echo
     //ack();
@@ -276,13 +271,12 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
     break;
   case 0xED: //set/reset LEDs
     ack();
-    read(leds); //do nothing with the rate
+    if(!read(leds)) ack(); //do nothing with the rate
 #ifdef _PS2DBG
     _PS2DBG.print("LEDs: ");
     _PS2DBG.println(*leds, HEX);
     //digitalWrite(LED_BUILTIN, *leds);
 #endif
-    ack();
     return 1;
     break;
   }
@@ -293,8 +287,7 @@ int PS2dev::keyboard_handle(unsigned char *leds) {
   unsigned char c;  //char stores data recieved from computer for KBD
   if(available())
   {
-    read(&c);
-    return keyboard_reply(c, leds);
+    if(!read(&c)) return keyboard_reply(c, leds);
   }
   return 0;
 }

@@ -1,15 +1,29 @@
-#include <ps2dev.h>
+#include <ps2dev.h>    //Emulate a PS/2 device
+PS2dev keyboard(3,2);  //clock, data
 
-PS2dev keyboard(3, 2); //clock, data
+unsigned long timecount = 0;
 
-void setup() {
+void setup()
+{
+  keyboard.keyboard_init();
+  Serial.begin(9600);
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
-void loop() {
-  keyboard.write(0x34); //Make
-  delay(100);
-  keyboard.write(0xF0); //Break
-  delay(100);
-  keyboard.write(0x34);
-  delay(1000);
+void loop()
+{
+  //Handle PS2 communication and react to keyboard led change
+  unsigned char leds;
+  if(keyboard.keyboard_handle(&leds)) {
+    //Serial.print('LEDS');
+    //Serial.print(leds, HEX);
+    digitalWrite(LED_BUILTIN, leds);
+  }
+
+  //Print letter every second
+  if((millis() - timecount) > 1000) {
+    keyboard.keyboard_mkbrk(0x16); //Make + Break key
+    Serial.print('.');
+    timecount = millis();
+  }
 }

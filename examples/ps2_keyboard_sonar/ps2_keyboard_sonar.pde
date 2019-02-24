@@ -1,7 +1,7 @@
 //Source: http://dduino.blogspot.com/2011/11/arduino-ps2-emulator-computer-control.html
 
 //KBD stuff
-#include "ps2dev.h"  // to emulate a PS/2 device
+#include <ps2dev.h>  // to emulate a PS/2 device
 PS2dev keyboard(3,2);  // PS2dev object (2:data, 3:clock)
 int enabled = 0;  // pseudo variable for state of "keyboard"
 unsigned char c;  //char stores data recieved from computer for KBD
@@ -138,7 +138,7 @@ void loop()
         {
           keyboard.write(0x0D); //send another Tab
           keyboard.write(0xF0);  //tab break
-          keyboard.write(0x0D);  //...        
+          keyboard.write(0x0D);  //...
           delay(700);
         }
       }

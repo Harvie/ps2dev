@@ -1,5 +1,4 @@
-
-#include "ps2dev.h"
+#include <ps2dev.h>
 
 PS2dev mouse(3,2); // 2 data 3clock
 
@@ -20,7 +19,7 @@ void write_packet() {
   char overflowy =0;
   char data[3];
   int x,y;
-  
+
   if (delta_x > 255) {
     overflowx =1;
     x=255;
@@ -28,7 +27,7 @@ void write_packet() {
   if (delta_x < -255) {
     overflowx = 1;
     x=-255;
-  }  
+  }
   if (delta_y > 255) {
     overflowy =1;
     y=255;
@@ -37,7 +36,7 @@ void write_packet() {
     overflowy = 1;
     y=-255;
   }
-  
+
   data[0] = ((overflowy & 1) << 7) |
     ( (overflowx & 1) << 6) |
     ( (((delta_y &0x100)>>8) & 1) << 5) |
@@ -46,10 +45,10 @@ void write_packet() {
     ( ( buttons[1] & 1) << 2) |
     ( ( buttons[2] & 1) << 1) |
     ( ( buttons[0] & 1) << 0) ;
-    
+
   data[1] = delta_x & 0xff;
   data[2] = delta_y & 0xff;
-  
+
   mouse.write(data[0]);
   mouse.write(data[1]);
 
@@ -69,15 +68,15 @@ int mousecommand(int command) {
   case 0xFF: //reset
     ack();
     //the while loop lets us wait for the host to be ready
-    while(mouse.write(0xAA)!=0);  
+    while(mouse.write(0xAA)!=0);
     while(mouse.write(0x00)!=0);
-  
+
     break;
   case 0xFE: //resend
     ack();
     break;
-  case 0xF6: //set defaults 
-    //enter stream mode   
+  case 0xF6: //set defaults
+    //enter stream mode
     ack();
     break;
   case 0xF5:  //disable data reporting
@@ -99,8 +98,8 @@ int mousecommand(int command) {
     ack();
     mouse.write(00);
     break;
-  case 0xF0: //set remote mode 
-    ack();  
+  case 0xF0: //set remote mode
+    ack();
     break;
   case 0xEE: //set wrap mode
     ack();
@@ -132,8 +131,8 @@ int mousecommand(int command) {
     ack();
     break;
 
-  } 
-  
+  }
+
 }
 
 int xcenter ;
@@ -144,9 +143,9 @@ int ysum = 0;
 
 void setup() {
   unsigned char val;
- 
+
   // send the mouse start up
-  while(mouse.write(0xAA)!=0);  
+  while(mouse.write(0xAA)!=0);
   while(mouse.write(0x00)!=0);
 
 
@@ -160,7 +159,7 @@ void loop() {
   if( (digitalRead(3)==LOW) || (digitalRead(2) == LOW)) {
     while(mouse.read(&c)) ;
     mousecommand(c);
-  } 
+  }
 
   if (enabled) {
     // move the mouse diagonally
