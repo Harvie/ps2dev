@@ -17,6 +17,7 @@ class PS2dev
 		PS2dev(int clk, int data);
 		int write(unsigned char data);
 		int read(unsigned char * data);
+		int available();
 	private:
 		int _ps2clk;
 		int _ps2data;

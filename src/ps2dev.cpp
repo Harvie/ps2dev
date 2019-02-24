@@ -119,6 +119,9 @@ int PS2dev::write(unsigned char data)
   return 0;
 }
 
+int PS2dev::available() {
+  return ( (digitalRead(__ps2data)==LOW) || (digitalRead(__ps2clk) == LOW));
+}
 
 int PS2dev::read(unsigned char * value)
 {
