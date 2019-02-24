@@ -75,6 +75,7 @@ int keyboardcommand(int command)
     ack();
     break;
   }
+  return 0;
 }
 
 void setup()
