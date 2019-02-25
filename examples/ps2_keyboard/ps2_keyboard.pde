@@ -13,6 +13,7 @@ void setup()
 void loop()
 {
   //Handle PS2 communication and react to keyboard led change
+  //This should be done at least once each 10ms
   unsigned char leds;
   if(keyboard.keyboard_handle(&leds)) {
     //Serial.print('LEDS');
