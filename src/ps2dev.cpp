@@ -20,8 +20,9 @@
 #define CLKHALF 20
 
 // Delay between bytes
-// I've found i need at least 400us to work, so i've put 500us for reliability
-#define BYTEWAIT 500
+// I've found i need at least 400us to get this working at all,
+// but even more is needed for reliability, so i've put 1000us
+#define BYTEWAIT 1000
 
 // Timeout if computer not sending for 30ms
 #define TIMEOUT 30
