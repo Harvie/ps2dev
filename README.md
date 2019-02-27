@@ -18,3 +18,9 @@ Further reading:
 
  * If you are implementing keyboard you should read the commands from computer quite often. I don't know how often, but 1 second is not enough. You will miss stuff like num/caps/scroll LED changes and maybe even more important stuff needed for proper ps2 protocol initialisation.
  * Calling `keyboard_handle(...);` each 10ms should be enough...
+
+# TODO
+
+ * Add mode, where attachInterrupt() will be used to watch CLK pin instead of need to constantly poll it using available() or keyboard_handle()
+ * Add mouse protocol handling directly to library
+ * Add scancode table
