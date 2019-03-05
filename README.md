@@ -24,3 +24,4 @@ Further reading:
  * Add mode, where attachInterrupt() will be used to watch CLK pin instead of need to constantly poll it using available() or keyboard_handle()
  * Add mouse protocol handling directly to library
  * Add scancode table
+ * Check against Arduino API style guide: https://www.arduino.cc/en/Reference/APIStyleGuide
