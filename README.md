@@ -8,6 +8,7 @@ Originaly from:
  * https://github.com/dpavlin/Arduino-projects/tree/master/libraries/ps2dev
  * Written by Chris J. Kiick, January 2008. https://github.com/ckiick
  * modified by Gene E. Scogin, August 2008.
+ * modified by Tomas 'Harvie' Mudrunka 2019. https://github.com/harvie/ps2dev
  * Release into public domain.
 
 Further reading:
