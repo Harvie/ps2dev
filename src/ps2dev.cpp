@@ -68,7 +68,7 @@ int PS2dev::write(unsigned char data)
   unsigned char parity = 1;
 
 #ifdef _PS2DBG
-  _PS2DBG.print("sending ");
+  _PS2DBG.print(F("sending "));
   _PS2DBG.println(data,HEX);
 #endif
 
@@ -79,11 +79,6 @@ int PS2dev::write(unsigned char data)
   if (digitalRead(_ps2data) == LOW) {
     return -2;
   }
-
-#ifdef _PS2DBG
-  _PS2DBG.print("sent ");
-  _PS2DBG.println(data,HEX);
-#endif
 
   golo(_ps2data);
   delayMicroseconds(CLKHALF);
@@ -96,10 +91,10 @@ int PS2dev::write(unsigned char data)
   for (i=0; i < 8; i++)
     {
       if (data & 0x01)
-	{
-	  gohi(_ps2data);
-	} else {
-	golo(_ps2data);
+      {
+        gohi(_ps2data);
+      } else {
+        golo(_ps2data);
       }
       delayMicroseconds(CLKHALF);
       golo(_ps2clk);
@@ -112,9 +107,9 @@ int PS2dev::write(unsigned char data)
     }
   // parity bit
   if (parity)
-    {
-      gohi(_ps2data);
-    } else {
+  {
+    gohi(_ps2data);
+  } else {
     golo(_ps2data);
   }
   delayMicroseconds(CLKHALF);
@@ -132,6 +127,11 @@ int PS2dev::write(unsigned char data)
   delayMicroseconds(CLKHALF);
 
   delayMicroseconds(BYTEWAIT);
+
+#ifdef _PS2DBG
+  _PS2DBG.print(F("sent "));
+  _PS2DBG.println(data,HEX);
+#endif
 
   return 0;
 }
