@@ -56,8 +56,8 @@ PS2dev::gohi(int pin)
 void
 PS2dev::golo(int pin)
 {
-  pinMode(pin, OUTPUT);
   digitalWrite(pin, LOW);
+  pinMode(pin, OUTPUT);
 }
 
 int PS2dev::write(unsigned char data)
