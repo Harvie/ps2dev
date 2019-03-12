@@ -20,6 +20,7 @@ Further reading:
 
  * If you are implementing keyboard you should read the commands from computer quite often. I don't know how often, but 1 second is not enough. You will miss stuff like num/caps/scroll LED changes and maybe even more important stuff needed for proper ps2 protocol initialisation.
  * Calling `keyboard_handle(...);` each 10ms should be enough...
+ * Serial debug is not intended to be enabled in production code. Use it only during development. Otherwise it might mess up the protocol timing.
 
 # TODO
 
@@ -27,3 +28,9 @@ Further reading:
  * Add mouse protocol handling directly to library
  * Add scancode table
  * Check against Arduino API style guide: https://www.arduino.cc/en/Reference/APIStyleGuide
+
+# Special thanks
+
+ * Cleveron https://cleveron.cz/
+ * Spoje.NET http://spoje.net/
+ * Brmlab Hackerspace Prague http://brmlab.cz/
