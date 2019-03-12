@@ -144,11 +144,11 @@ int PS2dev::available() {
 
 int PS2dev::read(unsigned char * value)
 {
-  unsigned char data = 0x00;
-  unsigned char i;
-  unsigned char bit = 0x01;
+  unsigned int data = 0x00;
+  unsigned int bit = 0x01;
 
-  unsigned char parity = 1;
+  unsigned char calculated_parity = 1;
+  unsigned char received_parity = 0;
 
   //wait for data line to go low and clock line to go high (or timeout)
   unsigned long waiting_since = millis();
@@ -162,27 +162,32 @@ int PS2dev::read(unsigned char * value)
   gohi(_ps2clk);
   delayMicroseconds(CLKHALF);
 
-  for (i=0; i < 8; i++)
-    {
-      if (digitalRead(_ps2data) == HIGH)
-	{
-	  data = data | bit;
-	} else {
+  while (bit < 0x0100) {
+    if (digitalRead(_ps2data) == HIGH)
+      {
+        data = data | bit;
+        calculated_parity = calculated_parity ^ 1;
+      } else {
+        calculated_parity = calculated_parity ^ 0;
       }
 
+    bit = bit << 1;
 
-      bit = bit << 1;
+    delayMicroseconds(CLKHALF);
+    golo(_ps2clk);
+    delayMicroseconds(CLKFULL);
+    gohi(_ps2clk);
+    delayMicroseconds(CLKHALF);
 
-      delayMicroseconds(CLKHALF);
-      golo(_ps2clk);
-      delayMicroseconds(CLKFULL);
-      gohi(_ps2clk);
-      delayMicroseconds(CLKHALF);
-
-      parity = parity ^ (data & 0x01);
-    }
+  }
   // we do the delay at the end of the loop, so at this point we have
   // already done the delay for the parity bit
+
+  // parity bit
+  if (digitalRead(_ps2data) == HIGH)
+    {
+      received_parity = 1;
+    }
 
   // stop bit
   delayMicroseconds(CLKHALF);
@@ -201,14 +206,22 @@ int PS2dev::read(unsigned char * value)
   gohi(_ps2data);
 
 
-  *value = data;
+  *value = data & 0x00FF;
 
 #ifdef _PS2DBG
-  _PS2DBG.print("Recv ");
+  _PS2DBG.print(F("received data "));
   _PS2DBG.println(*value,HEX);
+  _PS2DBG.print(F("received parity "));
+  _PS2DBG.print(received_parity,BIN);
+  _PS2DBG.print(F(" calculated parity "));
+  _PS2DBG.println(received_parity,BIN);
 #endif
+  if (received_parity == calculated_parity) {
+    return 0;
+  } else {
+    return -2;
+  }
 
-  return 0;
 }
 
 
