@@ -28,6 +28,8 @@ Further reading:
  * Add mouse protocol handling directly to library
  * Add scancode table
  * Check against Arduino API style guide: https://www.arduino.cc/en/Reference/APIStyleGuide
+ * Check why there are occasional issues with PS2Keyboard library https://github.com/PaulStoffregen/PS2Keyboard
+   * I've been using this to send keystrokes between two arduinos (from ps2dev to PS2Keyboard) and there are some issues (missed keystrokes). So i had to use SoftwareSerial.h instead, ditching the PS2 compatibility. We need to debug this...
 
 # Special thanks
 
