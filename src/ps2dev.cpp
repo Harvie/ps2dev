@@ -10,7 +10,7 @@
 #include "ps2dev.h"
 
 //Enable serial debug mode?
-#define _PS2DBG Serial
+//#define _PS2DBG Serial
 
 //since for the device side we are going to be in charge of the clock,
 //the two defines below are how long each _phase_ of the clock cycle is
