@@ -6,12 +6,13 @@ char buttons[3] = {0,0,0};
 
 int delta_x = 0;
 int delta_y = 0;
+
 //we start off not enabled
-int enabled =0;
+int enabled = 0;
 
 //ack a host command
 void ack() {
-  while(mouse.write(0xFA));
+  while (mouse.write(0xFA));
 }
 
 void write_packet() {
@@ -68,9 +69,8 @@ int mousecommand(int command) {
   case 0xFF: //reset
     ack();
     //the while loop lets us wait for the host to be ready
-    while(mouse.write(0xAA)!=0);
-    while(mouse.write(0x00)!=0);
-
+    while (mouse.write(0xAA)!=0);
+    while (mouse.write(0x00)!=0);
     break;
   case 0xFE: //resend
     ack();
@@ -130,12 +130,10 @@ int mousecommand(int command) {
   case 0xE6: //set scaling 1:1
     ack();
     break;
-
   }
-
 }
 
-int xcenter ;
+int xcenter;
 int ycenter;
 
 int xsum = 0;
@@ -145,19 +143,14 @@ void setup() {
   unsigned char val;
 
   // send the mouse start up
-  while(mouse.write(0xAA)!=0);
-  while(mouse.write(0x00)!=0);
-
-
+  mouse.write(0xAA);
+  mouse.write(0x00);
 }
 
-
-
-
 void loop() {
-  unsigned char  c;
-  if( (digitalRead(3)==LOW) || (digitalRead(2) == LOW)) {
-    while(mouse.read(&c)) ;
+  unsigned char c;
+  if ((digitalRead(3) == LOW) || (digitalRead(2) == LOW)) {
+    while (mouse.read(&c));
     mousecommand(c);
   }
 
@@ -165,8 +158,7 @@ void loop() {
     // move the mouse diagonally
     delta_x = 1;
     delta_y = 1;
-    write_packet()  ;
+    write_packet();
   }
   delay(50);
-
 }
