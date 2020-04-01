@@ -89,15 +89,56 @@ class PS2dev
 			SLASH = 4a,
 			RIGHT_SHIFT = 0x59,
 			LEFT_CONTROL = 0x14,
+			LEFT_ALT = 0x11,
+			SPACE = 0x29,
+			NUM_LOCK = 0x77,
+			ASTERISK = 0x7c,
+			NUMPAD_MINUS = 0x7b,
+			NUMPAD_SEVEN = 0x6c,
+			NUMPAD_EIGHT = 0x75,
+			NUMPAD_NINE = 0x7d,
+			PLUS = 0x79,
+			NUMPAD_FOUR = 0x6b,
+			NUMPAD_FIVE = 0x73,
+			NUMPAD_SIX = 0x74,
+			NUMPAD_ONE = 0x69,
+			NUMPAD_TWO = 0x72,
+			NUMPAD_THREE = 0x7a,
+			NUMPAD_ZERO = 0x70,
+			DECIMAL = 0x71
+		};
+
+		// All press transmissions using these are preceded with 0xe0
+		// All release transmissions using these are preceded with 0xe0, 0xf0
+		enum SpecialScanCodes
+		{
+			LEFT_WIN = 0x1f,
+			RIGHT_ALT = 0x11,
+			RIGHT_WIN = 0x27,
+			MENUS = 0x2f,
+			RIGHT_CONTROL = 0x14,
+			INSERT = 0x70,
+			HOME = 0x6c,
+			PAGE_UP = 0x7d,
+			DELETE = 0x71,
+			END = 0x69,
+			PAGE_DOWN = 0x7a,
+			UP_ARROW = 0x75,
+			LEFT_ARROW = 0x6b,
+			DOWN_ARROW = 0x72,
+			RIGHT_ARROW = 0x74,
+			DIVIDE = 0x4a,
+			NUMPAD_ENTER = 0x5a
 		};
 
 		int write(unsigned char data);
-		int read(unsigned char * data);
+		int read(unsigned char *data);
 		int available();
 		void keyboard_init();
 		int keyboard_reply(unsigned char cmd, unsigned char *leds);
 		int keyboard_handle(unsigned char *leds);
 		int keyboard_mkbrk(unsigned char code);
+
 	private:
 		int _ps2clk;
 		int _ps2data;
@@ -107,4 +148,3 @@ class PS2dev
 };
 
 #endif /* ps2dev_h */
-
