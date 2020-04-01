@@ -41,21 +41,18 @@ PS2dev::PS2dev(int clk, int data)
 }
 
 /*
- * according to some code I saw, these functions will
- * correctly set the clock and data pins for
- * various conditions.  It's done this way so you don't need
- * pullup resistors.
+ * These functions set the state of internal pull-up resistors
  */
 void PS2dev::gohi(int pin)
 {
-	pinMode(pin, INPUT);
-	digitalWrite(pin, HIGH);
+	DDRB &= ~(1 << pin); // pinMode(pin, INPUT);
+	PORTB |= (1 << pin); // digitalWrite(pin, HIGH);
 }
 
 void PS2dev::golo(int pin)
 {
-	digitalWrite(pin, LOW);
-	pinMode(pin, OUTPUT);
+	PORTB &= ~(1 << pin); // digitalWrite(pin, INPUT);
+	DDRB |= (1 << pin); // pinMode(pin, OUTPUT);
 }
 
 int PS2dev::write(unsigned char data)
@@ -281,7 +278,7 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
 
 int PS2dev::keyboard_handle(unsigned char *leds)
 {
-	unsigned char c;  //char stores data recieved from computer for KBD
+	unsigned char c;  //char stores data recieved from computer for keyboard
 
   	if(available() && !read(&c)) return keyboard_reply(c, leds);
 
@@ -293,6 +290,6 @@ int PS2dev::keyboard_mkbrk(unsigned char code)
 	write(code);
 	write(0xF0);
 	write(code);
-	
+
 	return 0;
 }

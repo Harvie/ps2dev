@@ -10,6 +10,7 @@
 #define ps2dev_h
 
 #include "Arduino.h"
+#include <avr/io.h>
 
 class PS2dev
 {
