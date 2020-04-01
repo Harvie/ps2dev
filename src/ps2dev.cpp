@@ -216,6 +216,7 @@ void PS2dev::keyboard_init()
 void PS2dev::ack()
 {
 	while (write(0xFA)) ;
+
   	return;
 }
 
@@ -223,6 +224,7 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
 {
 	unsigned char val;
 	unsigned char enabled;
+
 	switch (cmd)
   	{
   		case 0xFF: //reset
@@ -281,16 +283,67 @@ int PS2dev::keyboard_handle(unsigned char *leds)
 {
 	unsigned char c;  //char stores data recieved from computer for keyboard
 
-  	if(available() && !read(&c)) return keyboard_reply(c, leds);
+  	if (available() && !read(&c)) return keyboard_reply(c, leds);
 
   	return 0;
 }
 
-int PS2dev::keyboard_mkbrk(unsigned char code) // This function doesn't work with the modifyer keys (Escape, Space, Shift, etc.)
+int PS2dev::keyboard_press(unsigned char code)
 {
-	write(code);
-	write(0xF0);
-	write(code);
+	return write(code);
+}
 
-	return 0;
+int PS2dev::keyboard_release(unsigned char code)
+{
+	int r;
+
+	r = write(0xf0);
+	r += write(code);
+
+	return r;
+}
+
+int PS2dev::keyboard_press_special(unsigned char code)
+{
+	int r;
+
+	r = write(0xe0);
+	r += write(code);
+
+	return r;
+}
+
+int PS2dev::keyboard_release_special(unsigned char code)
+{
+	int r;
+
+	r = write(0xe0);
+	r += write(0xf0);
+	r += write(code);
+
+	return r;
+}
+
+int PS2dev::keyboard_mkbrk(unsigned char code)
+{
+	int r;
+
+	r = write(code);
+	r += write(0xf0);
+	r += write(code);
+
+	return r;
+}
+
+int PS2dev::keyboard_special_mkbrk(unsigned char code)
+{
+	int r;
+
+	r = write(0xe0);
+	r += write(code);
+	r += write(0xe0);
+	r += write(0xf0);
+	r += write(code);
+
+	return r;
 }

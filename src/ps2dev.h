@@ -135,9 +135,14 @@ class PS2dev
 		int read(unsigned char *data);
 		int available();
 		void keyboard_init();
+		int keyboard_press(unsigned char code);
+		int keyboard_release(unsigned char code);
+		int keyboard_press_special(unsigned char code);
+		int keyboard_release_special(unsigned char code);
 		int keyboard_reply(unsigned char cmd, unsigned char *leds);
 		int keyboard_handle(unsigned char *leds);
 		int keyboard_mkbrk(unsigned char code);
+		int keyboard_special_mkbrk(unsigned char code);
 
 	private:
 		int _ps2clk;
