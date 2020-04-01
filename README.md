@@ -9,6 +9,7 @@ Originaly from:
  * Written by Chris J. Kiick, January 2008. https://github.com/ckiick
  * modified by Gene E. Scogin, August 2008.
  * modified by Tomas 'Harvie' Mudrunka 2019. https://github.com/harvie/ps2dev
+ * modified once more by Iggy Glassman 2020. https://github.com/iggyglass
  * Release into public domain.
 
 Further reading:

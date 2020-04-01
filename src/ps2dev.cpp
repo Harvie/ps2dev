@@ -64,7 +64,7 @@ int PS2dev::write(unsigned char data)
 
 #ifdef _PS2DBG
 	_PS2DBG.print(F("sending "));
-	_PS2DBG.println(data,HEX);
+	_PS2DBG.println(data, HEX);
 #endif
 
 	if (digitalRead(_ps2clk) == LOW) return -1;
@@ -117,7 +117,7 @@ int PS2dev::write(unsigned char data)
 
 #ifdef _PS2DBG
 	_PS2DBG.print(F("sent "));
-	_PS2DBG.println(data,HEX);
+	_PS2DBG.println(data, HEX);
 #endif
 
 	return 0;
@@ -285,7 +285,7 @@ int PS2dev::keyboard_handle(unsigned char *leds)
   	return 0;
 }
 
-int PS2dev::keyboard_mkbrk(unsigned char code)
+int PS2dev::keyboard_mkbrk(unsigned char code) // This function doesn't work with the modifyer keys (Escape, Space, Shift, etc.)
 {
 	write(code);
 	write(0xF0);
