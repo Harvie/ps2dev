@@ -208,16 +208,13 @@ int PS2dev::read(unsigned char * value)
 void PS2dev::keyboard_init()
 {
 	while (write(0xAA) != 0) ;
-	delay(10);
 
-	return;
+	delay(10);
 }
 
 void PS2dev::ack()
 {
 	while (write(0xFA)) ;
-
-  	return;
 }
 
 int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
@@ -344,6 +341,48 @@ int PS2dev::keyboard_special_mkbrk(unsigned char code)
 	r += write(0xe0);
 	r += write(0xf0);
 	r += write(code);
+
+	return r;
+}
+
+int PS2dev::keyboard_press_printscreen()
+{
+	int r;
+
+	r = write(0xe0);
+	r += write(0x12);
+	r += write(0xe0);
+	r += write(0x7c);
+
+	return r;
+}
+
+int PS2dev::keyboard_release_printscreen()
+{
+	int r;
+
+	r = write(0xe0);
+	r += write(0xf0);
+	r += write(0x7c);
+	r += write(0xe0);
+	r += write(0xf0);
+	r += write(0x12);
+
+	return r;
+}
+
+int PS2dev::keyboard_pausebreak()
+{
+	int r;
+
+	r = write(0xe1);
+	r += write(0x14);
+	r += write(0x77);
+	r += write(0xe1);
+	r += write(0xf0);
+	r += write(0x14);
+	r += write(0xe0);
+	r += write(0x77);
 
 	return r;
 }
