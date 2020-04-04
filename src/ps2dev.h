@@ -19,6 +19,8 @@ class PS2dev
 	public:
 		PS2dev(int clk, int data);
 
+		// Enum containing all of the non-special keycodes/scancodes
+		// (if you can't find the scancode you're looking for here, check the special scancodes)
 		enum ScanCodes
 		{
 			ESCAPE = 0x76,
@@ -108,6 +110,7 @@ class PS2dev
 			DECIMAL = 0x71
 		};
 
+		// Enum containing all of the special keycodes/scancodes
 		// All press transmissions using these are preceded with 0xE0
 		// All release transmissions using these are preceded with 0xE0, 0xF0
 		enum SpecialScanCodes
