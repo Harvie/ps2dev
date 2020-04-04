@@ -372,6 +372,16 @@ int PS2dev::keyboard_release_printscreen()
 	return r;
 }
 
+int PS2dev::keyboard_mkbrk_printscreen()
+{
+	int r;
+
+	r = keyboard_pres_printscreen();
+	r += keyboard_release_printscreen();
+
+	return r;
+}
+
 int PS2dev::keyboard_pausebreak()
 {
 	int r;
