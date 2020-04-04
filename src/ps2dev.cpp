@@ -229,6 +229,7 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
 
     		//the while loop lets us wait for the host to be ready
     		while (write(0xAA) != 0) ;
+			
     		break;
   		case 0xFE: //resend
     		ack();

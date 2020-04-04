@@ -19,7 +19,7 @@ class PS2dev
 	public:
 		PS2dev(int clk, int data);
 
-		enum ScanCodes // Print Screen and Pause/Break are multiple sequences
+		enum ScanCodes
 		{
 			ESCAPE = 0x76,
 			F1 = 0x05,
@@ -108,8 +108,8 @@ class PS2dev
 			DECIMAL = 0x71
 		};
 
-		// All press transmissions using these are preceded with 0xe0
-		// All release transmissions using these are preceded with 0xe0, 0xf0
+		// All press transmissions using these are preceded with 0xE0
+		// All release transmissions using these are preceded with 0xE0, 0xF0
 		enum SpecialScanCodes
 		{
 			LEFT_WIN = 0x1f,
@@ -128,7 +128,25 @@ class PS2dev
 			DOWN_ARROW = 0x72,
 			RIGHT_ARROW = 0x74,
 			DIVIDE = 0x4a,
-			NUMPAD_ENTER = 0x5a
+			NUMPAD_ENTER = 0x5a,
+			NEXT_TRACK = 0x4d,
+			PREVIOUS_TRACK = 0x15,
+			STOP = 0x3b,
+			PLAY_PAUSE = 0x34,
+			MUTE = 0x23,
+			VOLUME_UP = 0x32,
+			VOLUME_DOWN = 0x21,
+			MEDIA_SELECT = 0x50,
+			EMAIL = 0x48,
+			CALCULATOR = 0x2b,
+			MY_COMPUTER = 0x40,
+			WWW_SEARCH = 0x10,
+			WWW_HOME = 0x3a,
+			WWW_BACK = 0x38,
+			WWW_FORWARD = 0x30,
+			WWW_STOP = 0x28,
+			WWW_REFRESH = 0x20,
+			WWW_FAVORITES = 0x18
 		};
 
 		int write(unsigned char data);
