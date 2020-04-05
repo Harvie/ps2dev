@@ -306,10 +306,105 @@ int PS2dev::keyboard_handle(unsigned char *leds) {
   return 0;
 }
 
+// Presses then releases one of the non-special characters
 int PS2dev::keyboard_mkbrk(unsigned char code)
 {
   write(code);
   write(0xF0);
   write(code);
   return 0;
+}
+
+// Presses one of the non-special characters
+int PS2dev::keyboard_press(unsigned char code)
+{
+	return write(code);
+}
+
+// Releases one of the non-special characters
+int PS2dev::keyboard_release(unsigned char code)
+{
+	write(0xf0);
+	write(code);
+
+	return 0;
+}
+
+// Presses one of the special characters
+int PS2dev::keyboard_press_special(unsigned char code)
+{
+	write(0xe0);
+	write(code);
+
+	return 0;
+}
+
+// Releases one of the special characters
+int PS2dev::keyboard_release_special(unsigned char code)
+{
+	write(0xe0);
+	write(0xf0);
+	write(code);
+
+	return 0;
+}
+
+// Presses then releases one of the special characters
+int PS2dev::keyboard_special_mkbrk(unsigned char code)
+{
+	write(0xe0);
+	write(code);
+	write(0xe0);
+	write(0xf0);
+	write(code);
+
+	return 0;
+}
+
+// Presses Printscreen
+int PS2dev::keyboard_press_printscreen()
+{
+	write(0xe0);
+	write(0x12);
+	write(0xe0);
+	write(0x7c);
+
+	return 0;
+}
+
+// Releases Printscreen
+int PS2dev::keyboard_release_printscreen()
+{
+	write(0xe0);
+	write(0xf0);
+	write(0x7c);
+	write(0xe0);
+	write(0xf0);
+	write(0x12);
+
+	return 0;
+}
+
+// Presses then releases Printscreen
+int PS2dev::keyboard_mkbrk_printscreen()
+{
+	keyboard_press_printscreen();
+	keyboard_release_printscreen();
+
+	return 0;
+}
+
+// Presses/Releases Pause/Break
+int PS2dev::keyboard_pausebreak()
+{
+	write(0xe1);
+	write(0x14);
+	write(0x77);
+	write(0xe1);
+	write(0xf0);
+	write(0x14);
+	write(0xe0);
+	write(0x77);
+
+	return 0;
 }
