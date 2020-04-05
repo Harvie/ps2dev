@@ -146,7 +146,10 @@ class PS2dev
 			WWW_FORWARD = 0x30,
 			WWW_STOP = 0x28,
 			WWW_REFRESH = 0x20,
-			WWW_FAVORITES = 0x18
+			WWW_FAVORITES = 0x18,
+			POWER = 0x5e,
+			SLEEP = 0x5f,
+			WAKE = 0x63
 		};
 
 		int write(unsigned char data);
