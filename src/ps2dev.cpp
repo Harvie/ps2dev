@@ -138,8 +138,7 @@ int PS2dev::write(unsigned char data)
 
 int PS2dev::available() {
   //delayMicroseconds(BYTEWAIT);
-  //return ( (digitalRead(_ps2data) == LOW) || (digitalRead(_ps2clk) == LOW) );
-  return ( (digitalRead(_ps2clk) == LOW) );
+  return ( (digitalRead(_ps2data) == LOW) || (digitalRead(_ps2clk) == LOW) );
 }
 
 int PS2dev::read(unsigned char * value)
