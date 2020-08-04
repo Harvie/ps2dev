@@ -14,6 +14,7 @@ Originaly from:
 
 Further reading:
  * https://www.arduinolibraries.info/libraries/ps2dev
+ * https://libraries.io/platformio/ps2dev (might not be up to date?)
  * https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf (PS2 specification)
  * https://github.com/ndusart/ps2-keyboard (similar library using timers instead of delays)
 
