@@ -4,6 +4,7 @@ This library allows arduino to emulate ps2 keyboard and/or mouse, so you can imp
 I want to improve this, provide better documentation and arduino library manager package for it...
 
 Originaly from:
+ * https://playground.arduino.cc/ComponentLib/Ps2mouse/
  * https://github.com/grappendorf/arduino-framework/tree/master/ps2dev
  * https://github.com/dpavlin/Arduino-projects/tree/master/libraries/ps2dev
  * Written by Chris J. Kiick, January 2008. https://github.com/ckiick
