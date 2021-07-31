@@ -6,6 +6,7 @@ void make_break_kb(byte data)
 {
 // makes and breaks the key
     keyboard.write(data);
+  keyboard.keyboard_init();
     delay(50);
     keyboard.write(0xF0);
     delay(50);
