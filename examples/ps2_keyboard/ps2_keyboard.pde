@@ -21,9 +21,9 @@ void loop()
     digitalWrite(LED_BUILTIN, leds);
   }
 
-  //Print letter every second
+  //Print a number every second
   if((millis() - timecount) > 1000) {
-    keyboard.keyboard_mkbrk(0x16); //Make + Break key
+    keyboard.keyboard_mkbrk(PS2dev::ONE);
     Serial.print('.');
     timecount = millis();
   }
