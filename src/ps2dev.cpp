@@ -240,7 +240,6 @@ void PS2dev::ack()
 int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
 {
   unsigned char val;
-  unsigned char enabled;
   switch (cmd)
   {
   case 0xFF: //reset
@@ -257,12 +256,10 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
     break;
   case 0xF5: //disable data reporting
     //FM
-    enabled = 0;
     ack();
     break;
   case 0xF4: //enable data reporting
     //FM
-    enabled = 1;
     ack();
     break;
   case 0xF3: //set typematic rate
