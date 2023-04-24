@@ -11,6 +11,8 @@
 
 #include "Arduino.h"
 
+#define RABUF_LEN 16
+
 class PS2dev
 {
 	public:
@@ -174,6 +176,13 @@ class PS2dev
 		void golo(int pin);
 		void gohi(int pin);
 		void ack();
+		int raw_write(unsigned char data);
+		int raw_read(unsigned char *data);
+		int raw_available();
+		int racnt();
+		unsigned char rabuf[RABUF_LEN]; /* Read ahead buffer */
+		int ridx;
+		int widx;
 };
 
 #endif /* ps2dev_h */

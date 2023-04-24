@@ -40,6 +40,7 @@ PS2dev::PS2dev(int clk, int data)
   _ps2data = data;
   gohi(_ps2clk);
   gohi(_ps2data);
+  ridx = widx = 0;
 }
 
 /*
@@ -66,6 +67,31 @@ int PS2dev::write(unsigned char data)
 {
   delayMicroseconds(BYTEWAIT);
 
+  do {
+    bool need_wait = false;
+    while (raw_available()) {
+      unsigned char c;
+      if (raw_read(&c) == 0) {
+        int widx_next = widx + 1;
+        if (widx_next == RABUF_LEN) widx_next = 0;
+        if (widx_next == ridx) {
+          /* Overflow. Discarding read data. */
+        } else {
+          /* Store read data into read ahead buffer */
+          rabuf[widx] = c;
+          widx = widx_next;
+        }
+        need_wait = true;
+      }
+    }
+    if (need_wait) delayMicroseconds(BYTEWAIT);
+  } while (raw_write(data) != 0);
+
+  return 0;
+}
+
+int PS2dev::raw_write(unsigned char data)
+{
   unsigned char i;
   unsigned char parity = 1;
 
@@ -73,14 +99,6 @@ int PS2dev::write(unsigned char data)
   _PS2DBG.print(F("sending "));
   _PS2DBG.println(data,HEX);
 #endif
-
-  if (digitalRead(_ps2clk) == LOW) {
-    return -1;
-  }
-
-  if (digitalRead(_ps2data) == LOW) {
-    return -2;
-  }
 
   golo(_ps2data);
   delayMicroseconds(CLKHALF);
@@ -92,6 +110,11 @@ int PS2dev::write(unsigned char data)
 
   for (i=0; i < 8; i++)
     {
+      if (digitalRead(_ps2clk) == LOW) { /* I/O request from host */
+        /* Abort */
+        gohi(_ps2data);
+        return -1;
+      }
       if (data & 0x01)
       {
         gohi(_ps2data);
@@ -138,12 +161,34 @@ int PS2dev::write(unsigned char data)
   return 0;
 }
 
+int
+PS2dev::racnt()
+{
+  int cnt = widx - ridx;
+  if (cnt < 0) cnt += RABUF_LEN;
+  return cnt;
+}
+
 int PS2dev::available() {
+  return (racnt() > 0 || raw_available());
+}
+
+int PS2dev::raw_available() {
   //delayMicroseconds(BYTEWAIT);
   return ( (digitalRead(_ps2data) == LOW) || (digitalRead(_ps2clk) == LOW) );
 }
 
 int PS2dev::read(unsigned char * value)
+{
+  if (racnt() > 0) { /* Try to read from read ahead buffer first. */
+    *value = rabuf[ridx++];
+    if (ridx == RABUF_LEN) ridx = 0;
+    return 0;
+  }
+  return raw_read(value);
+}
+
+int PS2dev::raw_read(unsigned char * value)
 {
   unsigned int data = 0x00;
   unsigned int bit = 0x01;
@@ -154,6 +199,7 @@ int PS2dev::read(unsigned char * value)
   //wait for data line to go low and clock line to go high (or timeout)
   unsigned long waiting_since = millis();
   while((digitalRead(_ps2data) != LOW) || (digitalRead(_ps2clk) != HIGH)) {
+    if (!raw_available()) return -2; /* Cancelled */
     if((millis() - waiting_since) > TIMEOUT) return -1;
   }
 
