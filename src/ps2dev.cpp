@@ -12,6 +12,8 @@
 //Enable serial debug mode?
 //#define _PS2DBG Serial
 
+#define BYTE_INTERVAL_MICROS 100
+
 //since for the device side we are going to be in charge of the clock,
 //the two defines below are how long each _phase_ of the clock cycle is
 #define CLKFULL 40
@@ -272,14 +274,16 @@ int PS2dev::raw_read(unsigned char * value)
 
 void PS2dev::keyboard_init()
 {
-  while(write(0xAA)!=0);
-  delay(10);
+  delay(200);
+  write(0xAA);
   return;
 }
 
 void PS2dev::ack()
 {
-  while(write(0xFA));
+  delayMicroseconds(BYTE_INTERVAL_MICROS);
+  write(0xFA);
+  delayMicroseconds(BYTE_INTERVAL_MICROS);
   return;
 }
 
@@ -291,7 +295,8 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
   case 0xFF: //reset
     ack();
     //the while loop lets us wait for the host to be ready
-    while(write(0xAA)!=0);
+    while (write(0xFA)!=0) delay(1); //send ACK
+    while (write(0xAA) != 0) delay(1); // send BAT_SUCCESS
     break;
   case 0xFE: //resend
     ack();
@@ -314,8 +319,8 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
     break;
   case 0xF2: //get device id
     ack();
-    write(0xAB);
-    write(0x83);
+    while (write(0xAB) != 0) delay(1); // ensure ID gets written, some hosts may be sensitive
+    while (write(0x83) != 0) delay(1); // this is critical for combined ports (they decide mouse/kb on this)
     break;
   case 0xF0: //set scan code set
     ack();
@@ -323,11 +328,16 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
     break;
   case 0xEE: //echo
     //ack();
+    delayMicroseconds(BYTE_INTERVAL_MICROS);
     write(0xEE);
+    delayMicroseconds(BYTE_INTERVAL_MICROS);
     break;
   case 0xED: //set/reset LEDs
-    ack();
-    if(!read(leds)) ack(); //do nothing with the rate
+    //ack();
+    while (write(0xAF) != 0) delay(1);
+    if(!read(leds)) {
+       while (write(0xAF) != 0) delay(1);
+    } 
 #ifdef _PS2DBG
     _PS2DBG.print("LEDs: ");
     _PS2DBG.println(*leds, HEX);
