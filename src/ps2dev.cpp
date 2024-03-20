@@ -334,9 +334,9 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
     break;
   case 0xED: //set/reset LEDs
     //ack();
-    while (write(0xAF) != 0) delay(1);
+    while (write(0xFA) != 0) delay(1);
     if(!read(leds)) {
-       while (write(0xAF) != 0) delay(1);
+       while (write(0xFA) != 0) delay(1);
     } 
 #ifdef _PS2DBG
     _PS2DBG.print("LEDs: ");
