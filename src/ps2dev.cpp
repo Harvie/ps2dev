@@ -40,7 +40,8 @@ PS2dev::PS2dev(int clk, int data)
   _ps2data = data;
   gohi(_ps2clk);
   gohi(_ps2data);
-  ridx = widx = 0;
+  leds = 0;
+  handling_io_abort = false;
 }
 
 /*
@@ -63,34 +64,18 @@ PS2dev::golo(int pin)
   pinMode(pin, OUTPUT);
 }
 
-int PS2dev::write(unsigned char data)
+int PS2dev::do_write(unsigned char data)
 {
-  delayMicroseconds(BYTEWAIT);
-
-  do {
-    bool need_wait = false;
-    while (raw_available()) {
-      unsigned char c;
-      if (raw_read(&c) == 0) {
-        int widx_next = widx + 1;
-        if (widx_next == RABUF_LEN) widx_next = 0;
-        if (widx_next == ridx) {
-          /* Overflow. Discarding read data. */
-        } else {
-          /* Store read data into read ahead buffer */
-          rabuf[widx] = c;
-          widx = widx_next;
-        }
-        need_wait = true;
-      }
-    }
-    if (need_wait) delayMicroseconds(BYTEWAIT);
-  } while (raw_write(data) != 0);
-
-  return 0;
+  int ret;
+  if ((ret = write(data)) == EABORT && !handling_io_abort) {
+    handling_io_abort = true;
+    keyboard_handle(&leds);
+    handling_io_abort = false;
+  }
+  return ret;
 }
 
-int PS2dev::raw_write(unsigned char data)
+int PS2dev::write(unsigned char data)
 {
   unsigned char i;
   unsigned char parity = 1;
@@ -113,7 +98,7 @@ int PS2dev::raw_write(unsigned char data)
       if (digitalRead(_ps2clk) == LOW) { /* I/O request from host */
         /* Abort */
         gohi(_ps2data);
-        return -1;
+        return EABORT;
       }
       if (data & 0x01)
       {
@@ -142,6 +127,11 @@ int PS2dev::raw_write(unsigned char data)
   delayMicroseconds(CLKFULL);
   gohi(_ps2clk);
   delayMicroseconds(CLKHALF);
+  if (digitalRead(_ps2clk) == LOW) { /* I/O request from host */
+    /* Abort */
+    gohi(_ps2data);
+    return EABORT;
+  }
 
   // stop bit
   gohi(_ps2data);
@@ -158,37 +148,26 @@ int PS2dev::raw_write(unsigned char data)
   _PS2DBG.println(data,HEX);
 #endif
 
-  return 0;
-}
-
-int
-PS2dev::racnt()
-{
-  int cnt = widx - ridx;
-  if (cnt < 0) cnt += RABUF_LEN;
-  return cnt;
+  return ENOERR;
 }
 
 int PS2dev::available() {
-  return (racnt() > 0 || raw_available());
-}
-
-int PS2dev::raw_available() {
   //delayMicroseconds(BYTEWAIT);
   return ( (digitalRead(_ps2data) == LOW) || (digitalRead(_ps2clk) == LOW) );
 }
 
-int PS2dev::read(unsigned char * value)
+int PS2dev::do_read(unsigned char * value)
 {
-  if (racnt() > 0) { /* Try to read from read ahead buffer first. */
-    *value = rabuf[ridx++];
-    if (ridx == RABUF_LEN) ridx = 0;
-    return 0;
+  int ret;
+  if ((ret = read(value)) == EABORT && !handling_io_abort) {
+    handling_io_abort = true;
+    keyboard_handle(&leds);
+    handling_io_abort = false;
   }
-  return raw_read(value);
+  return ret;
 }
 
-int PS2dev::raw_read(unsigned char * value)
+int PS2dev::read(unsigned char * value)
 {
   unsigned int data = 0x00;
   unsigned int bit = 0x01;
@@ -199,8 +178,8 @@ int PS2dev::raw_read(unsigned char * value)
   //wait for data line to go low and clock line to go high (or timeout)
   unsigned long waiting_since = millis();
   while((digitalRead(_ps2data) != LOW) || (digitalRead(_ps2clk) != HIGH)) {
-    if (!raw_available()) return -2; /* Cancelled */
-    if((millis() - waiting_since) > TIMEOUT) return -1;
+    if (!available()) return ECANCEL; /* Cancelled */
+    if((millis() - waiting_since) > TIMEOUT) return ETIMEOUT;
   }
 
   delayMicroseconds(CLKHALF);
@@ -208,6 +187,11 @@ int PS2dev::raw_read(unsigned char * value)
   delayMicroseconds(CLKFULL);
   gohi(_ps2clk);
   delayMicroseconds(CLKHALF);
+
+  if (digitalRead(_ps2clk) == LOW) { /* I/O request from host */
+    /* Abort */
+    return EABORT;
+  }
 
   while (bit < 0x0100) {
     if (digitalRead(_ps2data) == HIGH)
@@ -226,6 +210,10 @@ int PS2dev::raw_read(unsigned char * value)
     gohi(_ps2clk);
     delayMicroseconds(CLKHALF);
 
+    if (digitalRead(_ps2clk) == LOW) { /* I/O request from host */
+      /* Abort */
+      return EABORT;
+    }
   }
   // we do the delay at the end of the loop, so at this point we have
   // already done the delay for the parity bit
@@ -264,9 +252,9 @@ int PS2dev::raw_read(unsigned char * value)
   _PS2DBG.println(received_parity,BIN);
 #endif
   if (received_parity == calculated_parity) {
-    return 0;
+    return ENOERR;
   } else {
-    return -2;
+    return ECANCEL;
   }
 
 }
@@ -287,7 +275,7 @@ void PS2dev::ack()
   return;
 }
 
-int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
+int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds_)
 {
   unsigned char val;
   switch (cmd)
@@ -319,8 +307,13 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
     break;
   case 0xF2: //get device id
     ack();
-    while (write(0xAB) != 0) delay(1); // ensure ID gets written, some hosts may be sensitive
-    while (write(0x83) != 0) delay(1); // this is critical for combined ports (they decide mouse/kb on this)
+    do {
+      // ensure ID gets written, some hosts may be sensitive
+      if (do_write(0xAB) == EABORT) continue;
+      // this is critical for combined ports (they decide mouse/kb on this)
+      if (do_write(0x83) == EABORT) continue;
+      break;
+    } while (!handling_io_abort);
     break;
   case 0xF0: //set scan code set
     ack();
@@ -335,25 +328,26 @@ int PS2dev::keyboard_reply(unsigned char cmd, unsigned char *leds)
   case 0xED: //set/reset LEDs
     //ack();
     while (write(0xFA) != 0) delay(1);
-    if(!read(leds)) {
+    if(!read(&leds)) {
        while (write(0xFA) != 0) delay(1);
     } 
 #ifdef _PS2DBG
     _PS2DBG.print("LEDs: ");
-    _PS2DBG.println(*leds, HEX);
-    //digitalWrite(LED_BUILTIN, *leds);
+    _PS2DBG.println(leds, HEX);
+    //digitalWrite(LED_BUILTIN, leds);
 #endif
+	*leds_ = leds;
     return 1;
     break;
   }
   return 0;
 }
 
-int PS2dev::keyboard_handle(unsigned char *leds) {
+int PS2dev::keyboard_handle(unsigned char *leds_) {
   unsigned char c;  //char stores data recieved from computer for KBD
   if(available())
   {
-    if(!read(&c)) return keyboard_reply(c, leds);
+    if(!read(&c)) return keyboard_reply(c, leds_);
   }
   return 0;
 }
@@ -361,23 +355,38 @@ int PS2dev::keyboard_handle(unsigned char *leds) {
 // Presses then releases one of the non-special characters
 int PS2dev::keyboard_mkbrk(unsigned char code)
 {
-  write(code);
-  write(0xF0);
-  write(code);
+	do {
+		if (do_write(code) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
+	do {
+		if (do_write(0xF0) == EABORT) continue;
+		if (do_write(code) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
+
   return 0;
 }
 
 // Presses one of the non-special characters
 int PS2dev::keyboard_press(unsigned char code)
 {
-	return write(code);
+	do {
+		if (do_write(code) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
+
+	return 0;
 }
 
 // Releases one of the non-special characters
 int PS2dev::keyboard_release(unsigned char code)
 {
-	write(0xf0);
-	write(code);
+	do {
+		if (do_write(0xf0) == EABORT) continue;
+		if (do_write(code) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
 
 	return 0;
 }
@@ -385,8 +394,11 @@ int PS2dev::keyboard_release(unsigned char code)
 // Presses one of the special characters
 int PS2dev::keyboard_press_special(unsigned char code)
 {
-	write(0xe0);
-	write(code);
+	do {
+		if (do_write(0xe0) == EABORT) continue;
+		if (do_write(code) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
 
 	return 0;
 }
@@ -394,9 +406,12 @@ int PS2dev::keyboard_press_special(unsigned char code)
 // Releases one of the special characters
 int PS2dev::keyboard_release_special(unsigned char code)
 {
-	write(0xe0);
-	write(0xf0);
-	write(code);
+	do {
+		if (do_write(0xe0) == EABORT) continue;
+		if (do_write(0xf0) == EABORT) continue;
+		if (do_write(code) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
 
 	return 0;
 }
@@ -404,11 +419,17 @@ int PS2dev::keyboard_release_special(unsigned char code)
 // Presses then releases one of the special characters
 int PS2dev::keyboard_special_mkbrk(unsigned char code)
 {
-	write(0xe0);
-	write(code);
-	write(0xe0);
-	write(0xf0);
-	write(code);
+	do {
+		if (do_write(0xe0) == EABORT) continue;
+		if (do_write(code) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
+	do {
+		if (do_write(0xe0) == EABORT) continue;
+		if (do_write(0xf0) == EABORT) continue;
+		if (do_write(code) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
 
 	return 0;
 }
@@ -416,10 +437,14 @@ int PS2dev::keyboard_special_mkbrk(unsigned char code)
 // Presses Printscreen
 int PS2dev::keyboard_press_printscreen()
 {
-	write(0xe0);
-	write(0x12);
-	write(0xe0);
-	write(0x7c);
+	do {
+		if (do_write(0xe0) == EABORT) continue;
+		if (do_write(0x12) == EABORT) continue;
+		if (do_write(0xe0) == EABORT) continue;
+		if (do_write(0x7c) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
+
 
 	return 0;
 }
@@ -427,12 +452,15 @@ int PS2dev::keyboard_press_printscreen()
 // Releases Printscreen
 int PS2dev::keyboard_release_printscreen()
 {
-	write(0xe0);
-	write(0xf0);
-	write(0x7c);
-	write(0xe0);
-	write(0xf0);
-	write(0x12);
+	do {
+		if (do_write(0xe0) == EABORT) continue;
+		if (do_write(0xf0) == EABORT) continue;
+		if (do_write(0x7c) == EABORT) continue;
+		if (do_write(0xe0) == EABORT) continue;
+		if (do_write(0xf0) == EABORT) continue;
+		if (do_write(0x12) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
 
 	return 0;
 }
@@ -449,14 +477,20 @@ int PS2dev::keyboard_mkbrk_printscreen()
 // Presses/Releases Pause/Break
 int PS2dev::keyboard_pausebreak()
 {
-	write(0xe1);
-	write(0x14);
-	write(0x77);
-	write(0xe1);
-	write(0xf0);
-	write(0x14);
-	write(0xe0);
-	write(0x77);
+	do {
+		if (do_write(0xe1) == EABORT) continue;
+		if (do_write(0x14) == EABORT) continue;
+		if (do_write(0x77) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
+	do {
+		if (do_write(0xe1) == EABORT) continue;
+		if (do_write(0xf0) == EABORT) continue;
+		if (do_write(0x14) == EABORT) continue;
+		if (do_write(0xe0) == EABORT) continue;
+		if (do_write(0x77) == EABORT) continue;
+		break;
+	} while (!handling_io_abort);
 
 	return 0;
 }
