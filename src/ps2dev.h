@@ -152,6 +152,14 @@ class PS2dev
 			WAKE = 0x63
 		};
 
+		enum ErrorCodes
+		{
+			EABORT = -3,
+			ECANCEL = -2,
+			ETIMEOUT = -1,
+			ENOERR = 0
+		};
+
 		int write(unsigned char data);
 		int read(unsigned char * data);
 		int available();
@@ -174,6 +182,10 @@ class PS2dev
 		void golo(int pin);
 		void gohi(int pin);
 		void ack();
+		int do_write(unsigned char data);
+		int do_read(unsigned char *data);
+		bool handling_io_abort;
+		unsigned char leds;
 };
 
 #endif /* ps2dev_h */
